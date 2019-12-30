@@ -1,0 +1,17 @@
+1. msfvenom -a x86 --platform linux -p linux/x86/exec CMD="whoami" -f raw> exec_whoami.bin
+2. sctest -vv -S -s 10000 -G shell.dot < exec_whoami.bin
+[emu 0x0x16c8100 debug ] 6A0B                            push byte 0xb		
+[emu 0x0x16c8100 debug ] 58                              pop eax		; execve()
+[emu 0x0x16c8100 debug ] 99                              cwd
+[emu 0x0x16c8100 debug ] 52                              push edx		; in this case - set to 0 due to cwd and small eax
+[emu 0x0x16c8100 debug ] 66682D63                        push word 0x632d	; "-c"
+[emu 0x0x16c8100 debug ] 89E7                            mov edi,esp		; address of "-c"
+[emu 0x0x16c8100 debug ] 682F736800                      push dword 0x68732f	; /bin/sh
+[emu 0x0x16c8100 debug ] 682F62696E                      push dword 0x6e69622f
+[emu 0x0x16c8100 debug ] 89E3                            mov ebx,esp		; 1st arg of execve()
+[emu 0x0x16c8100 debug ] 52                              push edx		; null
+[emu 0x0x16c8100 debug ] E8                              call 0x1		; place "whoami" in stack
+[emu 0x0x16c8100 debug ] 57                              push edi		; push "-c"
+[emu 0x0x16c8100 debug ] 53                              push ebx		; push "/bin/sh"
+[emu 0x0x16c8100 debug ] 89E1                            mov ecx,esp		; 2nd argument of execve() pointer to args
+[emu 0x0x16c8100 debug ] CD80                            int 0x80		; execute execve()
